@@ -150,16 +150,23 @@ def pull_users_from_device(request, device_id: int):
     if request.jwt_payload['role'] not in ['SUPER_ADMIN', 'HR_MANAGER']:
         raise HttpError(403, "Permission Denied")
         
+    zk = None
     try:
-        device = Device.objects.get(id=device_id, is_active=True)
-    except Device.DoesNotExist:
-        raise HttpError(404, "Device not found or inactive")
-        
-    zk = ZKService(device)
-    if not zk.connect():
-        raise HttpError(400, f"Failed to connect to device {device.name}")
-        
-    try:
+        try:
+            device = Device.objects.get(id=device_id, is_active=True)
+        except Device.DoesNotExist:
+            return {
+                "success": False,
+                "message": f"Device {device_id} not found or inactive"
+            }
+            
+        zk = ZKService(device)
+        if not zk.connect():
+            return {
+                "success": False,
+                "message": f"Failed to connect to device {device.name}"
+            }
+            
         users = zk.get_users()
         imported_count = 0
         skipped_count = 0
@@ -278,6 +285,7 @@ def pull_users_from_device(request, device_id: int):
             "traceback": tb
         }
     finally:
-        zk.disconnect()
+        if zk:
+            zk.disconnect()
 
 
