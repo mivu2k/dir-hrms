@@ -165,6 +165,7 @@ def pull_users_from_device(request, device_id: int):
         skipped_count = 0
         
         import random
+        from django.utils import timezone
         from django.contrib.auth.models import User
         from employees.models import Employee, Department, Designation
         from attendance.models import Shift
