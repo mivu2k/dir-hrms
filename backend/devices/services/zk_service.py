@@ -49,7 +49,7 @@ class ZKService:
 
         try:
             logger.info(f"Connecting to ZKTeco device {self.device.ip_address}:{self.device.port}")
-            self.zk = ZK(self.device.ip_address, port=self.device.port, timeout=8, force_udp=True)
+            self.zk = ZK(self.device.ip_address, port=self.device.port, timeout=8, password=self.device.password, force_udp=True)
             self.conn = self.zk.connect()
             self.is_connected = True
             self.device.connection_status = 'ONLINE'

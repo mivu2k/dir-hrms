@@ -7,6 +7,7 @@ class DeviceSchema(BaseModel):
     name: str
     ip_address: str
     port: int
+    password: int
     location: Optional[str] = None
     is_active: bool
     is_simulated: bool
@@ -25,6 +26,7 @@ class DeviceCreateSchema(BaseModel):
     name: str
     ip_address: str
     port: Optional[int] = 4370
+    password: Optional[int] = 0
     location: Optional[str] = None
     is_active: Optional[bool] = True
     is_simulated: Optional[bool] = True

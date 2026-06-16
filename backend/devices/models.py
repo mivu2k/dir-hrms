@@ -10,6 +10,7 @@ class Device(models.Model):
     name = models.CharField(max_length=150)
     ip_address = models.CharField(max_length=50)
     port = models.IntegerField(default=4370)
+    password = models.IntegerField(default=0, help_text="Biometric device communication password (Comkey), default is 0.")
     location = models.CharField(max_length=150, null=True, blank=True)
     is_active = models.BooleanField(default=True)
     is_simulated = models.BooleanField(default=True, help_text="If enabled, connection and downloads will be simulated.")
