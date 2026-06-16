@@ -116,3 +116,27 @@ def get_device_logs(request, device_id: int, limit: int = 50):
         raise HttpError(404, "Device not found")
         
     return DeviceLog.objects.filter(device=device)[:limit]
+
+
+@device_router.post("/clear-mock-data", response=dict)
+def clear_mock_data(request):
+    if request.jwt_payload['role'] not in ['SUPER_ADMIN', 'HR_MANAGER']:
+        raise HttpError(403, "Permission Denied")
+        
+    from django.db.models import Q
+    from attendance.models import AttendanceLog, AttendanceSummary
+    
+    # 1. Delete all device logs for simulated devices
+    device_logs_deleted, _ = DeviceLog.objects.filter(device__is_simulated=True).delete()
+    
+    # 2. Delete all attendance logs from simulated devices (or where device was deleted/null)
+    logs_deleted, _ = AttendanceLog.objects.filter(Q(device__is_simulated=True) | Q(device__isnull=True)).delete()
+    
+    # 3. Delete all summaries since they were computed from mock data
+    summaries_deleted, _ = AttendanceSummary.objects.all().delete()
+    
+    return {
+        "success": True, 
+        "message": f"Successfully deleted mock data: {logs_deleted} logs, {device_logs_deleted} sync logs, and {summaries_deleted} summaries."
+    }
+

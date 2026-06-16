@@ -32,16 +32,17 @@ def sync_device_attendance(device_id: int) -> dict:
 
         new_logs_count = 0
         affected_pairs = set()  # set of (employee, date) to recalculate daily summary
+        mismatched_ids = set()
 
         # 2. Save logs to database
+        from attendance.models import AttendanceSummary
         for raw_log in logs:
             bio_id = raw_log['bio_device_user_id']
             try:
                 # Find matching employee by biometric user ID
                 employee = Employee.objects.get(bio_device_user_id=bio_id, status='ACTIVE')
             except Employee.DoesNotExist:
-                # Log warning but continue, maybe employee is not yet registered in system
-                logger.warning(f"Raw log with user_id {bio_id} on device {device.name} has no matching Employee in Django DB.")
+                mismatched_ids.add(str(bio_id))
                 continue
 
             # Create or get raw log
@@ -58,9 +59,17 @@ def sync_device_attendance(device_id: int) -> dict:
 
             if created:
                 new_logs_count += 1
-                # Mark for daily summary calculation (local date)
-                local_date = timezone.localtime(raw_log['timestamp']).date()
+            
+            # Recalculate daily summary if log is new OR if summary doesn't exist yet for this date
+            local_date = timezone.localtime(raw_log['timestamp']).date()
+            if created or not AttendanceSummary.objects.filter(employee=employee, date=local_date).exists():
                 affected_pairs.add((employee, local_date))
+
+        # Log mismatched IDs as a warning in DeviceLog for admin visibility
+        if mismatched_ids:
+            warn_msg = f"Found device logs with biometric IDs {sorted(list(mismatched_ids))} that have no matching active Employee in the database."
+            logger.warning(warn_msg)
+            zk._log_event('WARNING', warn_msg)
 
         # 3. Recalculate daily summaries for affected employee/dates
         for emp, date in affected_pairs:
