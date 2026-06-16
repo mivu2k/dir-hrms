@@ -7,6 +7,7 @@
         <p class="text-xxs text-slate-400 mt-0.5">Manage terminal IP connections, health states, and log downloads</p>
       </div>
       <button 
+        v-if="authStore.isAdmin"
         @click="openAddModal"
         class="bg-indigo-600 hover:bg-indigo-500 text-white font-medium px-4 py-2 rounded-lg text-xs transition-colors flex items-center space-x-2 cursor-pointer shadow-lg shadow-indigo-600/20"
       >
@@ -94,6 +95,17 @@
             {{ actionLoading === d.id ? 'Syncing...' : 'Sync Logs' }}
           </button>
           <button 
+            v-if="authStore.isAdmin"
+            @click="openEditModal(d)"
+            class="text-amber-400 hover:text-amber-300 hover:bg-amber-500/10 p-2 border border-slate-900 rounded-lg cursor-pointer"
+            title="Edit Terminal"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            </svg>
+          </button>
+          <button 
+            v-if="authStore.isAdmin"
             @click="deleteDevice(d.id)"
             class="text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 p-2 border border-slate-900 rounded-lg cursor-pointer"
             title="Delete Terminal"
@@ -138,7 +150,7 @@
     <div v-if="showModal" class="fixed inset-0 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm z-50">
       <div class="bg-slate-900 border border-slate-800 w-full max-w-md rounded-xl p-6 shadow-2xl space-y-4">
         <div class="flex items-center justify-between border-b border-slate-800 pb-3">
-          <h3 class="text-sm font-bold text-white uppercase tracking-wider">Register Biometric Device</h3>
+          <h3 class="text-sm font-bold text-white uppercase tracking-wider">{{ isEditing ? 'Edit Biometric Device' : 'Register Biometric Device' }}</h3>
           <button @click="showModal = false" class="text-slate-400 hover:text-white cursor-pointer">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -179,7 +191,9 @@
 
           <div class="flex items-center justify-end space-x-3 border-t border-slate-800 pt-3">
             <button type="button" @click="showModal = false" class="px-4 py-2 border border-slate-800 text-slate-400 hover:text-white rounded-lg text-xs cursor-pointer">Cancel</button>
-            <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-medium cursor-pointer">Register Terminal</button>
+            <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-medium cursor-pointer">
+              {{ isEditing ? 'Save Changes' : 'Register Terminal' }}
+            </button>
           </div>
         </form>
       </div>
@@ -190,11 +204,16 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import axios from 'axios';
+import { useAuthStore } from '../stores/auth';
+
+const authStore = useAuthStore();
 
 const devices = ref([]);
 const deviceLogs = ref([]);
 const showModal = ref(false);
 const modalError = ref(null);
+const isEditing = ref(false);
+const editingDeviceId = ref(null);
 
 const actionLoading = ref(null);
 
@@ -236,18 +255,39 @@ const openAddModal = () => {
     location: '',
     is_simulated: true
   };
+  isEditing.value = false;
+  editingDeviceId.value = null;
+  modalError.value = null;
+  showModal.value = true;
+};
+
+const openEditModal = (device) => {
+  form.value = {
+    name: device.name,
+    ip_address: device.ip_address,
+    port: device.port,
+    password: device.password || 0,
+    location: device.location || '',
+    is_simulated: device.is_simulated
+  };
+  editingDeviceId.value = device.id;
+  isEditing.value = true;
   modalError.value = null;
   showModal.value = true;
 };
 
 const saveDevice = async () => {
   try {
-    await axios.post('/devices/', form.value);
+    if (isEditing.value) {
+      await axios.put(`/devices/${editingDeviceId.value}`, form.value);
+    } else {
+      await axios.post('/devices/', form.value);
+    }
     showModal.value = false;
     await fetchDevices();
   } catch (err) {
-    console.error('Error creating device:', err);
-    modalError.value = err.response?.data?.detail || 'Failed to create terminal config.';
+    console.error('Error saving device:', err);
+    modalError.value = err.response?.data?.detail || 'Failed to save terminal config.';
   }
 };
 
@@ -258,6 +298,7 @@ const deleteDevice = async (id) => {
     await fetchDevices();
   } catch (err) {
     console.error(err);
+    alert('Delete Failed: ' + (err.response?.data?.detail || 'Failed to delete device configuration.'));
   }
 };
 

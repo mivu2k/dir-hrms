@@ -73,15 +73,6 @@
         </button>
       </form>
     </div>
-
-    <!-- Default seeded info box -->
-    <div class="mt-6 bg-slate-900/30 border border-slate-900 rounded-xl p-4 text-center">
-      <p class="text-xs text-slate-400">
-        Demo Accounts: <br>
-        <span class="font-mono text-slate-300">admin</span> / <span class="font-mono text-slate-300">admin123</span> (Super Admin)<br>
-        <span class="font-mono text-slate-300">hr_manager</span> / <span class="font-mono text-slate-300">admin123</span> (HR Manager)
-      </p>
-    </div>
   </div>
 </template>
 
