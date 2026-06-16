@@ -92,20 +92,29 @@
         </div>
 
         <!-- Actions -->
-        <div class="mt-6 pt-4 border-t border-slate-900 flex items-center gap-3">
+        <div class="mt-6 pt-4 border-t border-slate-900 flex flex-wrap items-center gap-2">
           <button 
             @click="testConnection(d)"
             :disabled="actionLoading === d.id"
-            class="flex-1 border border-slate-800 hover:bg-slate-800 text-slate-300 hover:text-white py-2 rounded-lg text-xxs transition-colors cursor-pointer disabled:opacity-50"
+            class="flex-1 min-w-[90px] border border-slate-800 hover:bg-slate-800 text-slate-300 hover:text-white py-2 rounded-lg text-xxs transition-colors cursor-pointer disabled:opacity-50"
           >
-            {{ actionLoading === d.id ? 'Testing...' : 'Test Connection' }}
+            {{ actionLoading === d.id ? 'Testing...' : 'Test' }}
           </button>
           <button 
             @click="syncDeviceLogs(d)"
             :disabled="actionLoading === d.id"
-            class="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-2 rounded-lg text-xxs transition-colors cursor-pointer disabled:opacity-50"
+            class="flex-1 min-w-[90px] bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-2 rounded-lg text-xxs transition-colors cursor-pointer disabled:opacity-50"
           >
             {{ actionLoading === d.id ? 'Syncing...' : 'Sync Logs' }}
+          </button>
+          <button 
+            v-if="authStore.isAdmin"
+            @click="pullDeviceUsers(d)"
+            :disabled="actionLoading === d.id"
+            class="flex-1 min-w-[90px] border border-indigo-500/30 hover:bg-indigo-500/10 text-indigo-400 font-medium py-2 rounded-lg text-xxs transition-colors cursor-pointer disabled:opacity-50"
+            title="Import users registered on device"
+          >
+            {{ actionLoading === d.id ? 'Pulling...' : 'Pull Users' }}
           </button>
           <button 
             v-if="authStore.isAdmin"
@@ -355,6 +364,19 @@ const clearMockData = async () => {
     await Promise.all([fetchDevices(), fetchAllDeviceLogs()]);
   } catch (err) {
     alert('Clear Failed: ' + (err.response?.data?.detail || 'API error'));
+  }
+};
+
+const pullDeviceUsers = async (device) => {
+  actionLoading.value = device.id;
+  try {
+    const res = await axios.post(`/devices/${device.id}/pull-users`);
+    alert(`Import Complete:\n${res.data.message}`);
+    await fetchDevices();
+  } catch (err) {
+    alert('Import Failed: ' + (err.response?.data?.detail || 'Import error'));
+  } finally {
+    actionLoading.value = null;
   }
 };
 

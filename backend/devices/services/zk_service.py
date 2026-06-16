@@ -238,6 +238,39 @@ class ZKService:
             self.conn.enable_device()
             raise Exception(f"Failed to fetch attendance logs: {str(e)}")
 
+    def get_users(self) -> list:
+        """
+        Downloads all biometric users registered on the device.
+        Supports physical device connections and returns mock users in simulated mode.
+        """
+        if not self.is_connected:
+            raise Exception("Device is not connected.")
+
+        if self.device.is_simulated:
+            # Create a simple mock user container class
+            class MockZKUser:
+                def __init__(self, user_id, name):
+                    self.user_id = user_id
+                    self.name = name
+                    self.privilege = 0
+                    self.card_id = ''
+
+            # Return Ten, Eleven, Twelve as sample unmapped users to test imports
+            return [
+                MockZKUser('10', 'Device User Ten'),
+                MockZKUser('11', 'Device User Eleven'),
+                MockZKUser('12', 'Device User Twelve')
+            ]
+
+        try:
+            self.conn.disable_device()
+            users = self.conn.get_users()
+            self.conn.enable_device()
+            return users
+        except Exception as e:
+            self.conn.enable_device()
+            raise Exception(f"Failed to get users from physical device: {str(e)}")
+
     def sync_user_information(self) -> bool:
         """
         Uploads all database employees who have a biometric device user ID to the device.
