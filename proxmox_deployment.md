@@ -66,11 +66,15 @@ SSH into your Proxmox LXC container (e.g., `ssh root@192.168.1.150`) and perform
     ```bash
     apt update && apt upgrade -y
     ```
-2.  **Install Essential Packages**:
+2.  **Add NodeSource Repository for Node 20**:
     ```bash
-    apt install -y git python3 python3-pip python3-venv python3-dev build-essential libmysqlclient-dev pkg-config redis-server nginx nodejs npm
+    curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
     ```
-3.  **Configure MySQL 8 Database**:
+3.  **Install Essential Packages & Node.js**:
+    ```bash
+    apt install -y git python3 python3-pip python3-venv python3-dev build-essential libmysqlclient-dev pkg-config redis-server nginx nodejs
+    ```
+4.  **Configure MySQL 8 Database**:
     *   Install MySQL Server:
         ```bash
         apt install -y mysql-server
