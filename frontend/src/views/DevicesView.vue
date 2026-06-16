@@ -160,6 +160,10 @@
             <input v-model="form.port" type="number" required class="form-input" />
           </div>
           <div>
+            <label class="block text-xxs font-semibold uppercase tracking-wider text-slate-400 mb-1">Communication Password (Comkey)</label>
+            <input v-model="form.password" type="number" class="form-input" placeholder="0 if disabled" />
+          </div>
+          <div>
             <label class="block text-xxs font-semibold uppercase tracking-wider text-slate-400 mb-1">Branch / Location</label>
             <input v-model="form.location" type="text" class="form-input" placeholder="e.g. Reception" />
           </div>
@@ -198,6 +202,7 @@ const form = ref({
   name: '',
   ip_address: '',
   port: 4370,
+  password: 0,
   location: '',
   is_simulated: true
 });
@@ -227,6 +232,7 @@ const openAddModal = () => {
     name: '',
     ip_address: '192.168.1.201',
     port: 4370,
+    password: 0,
     location: '',
     is_simulated: true
   };
