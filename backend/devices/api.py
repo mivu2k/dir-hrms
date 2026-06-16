@@ -267,7 +267,16 @@ def pull_users_from_device(request, device_id: int):
             "skipped_count": skipped_count
         }
     except Exception as e:
-        raise HttpError(400, f"Error pulling users from device: {str(e)}")
+        import traceback
+        tb = traceback.format_exc()
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Error pulling users from device: {str(e)}\n{tb}")
+        return {
+            "success": False,
+            "message": f"Error pulling users from device: {str(e)}",
+            "traceback": tb
+        }
     finally:
         zk.disconnect()
 

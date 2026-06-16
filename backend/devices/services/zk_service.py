@@ -235,7 +235,10 @@ class ZKService:
             
             return formatted_logs
         except Exception as e:
-            self.conn.enable_device()
+            try:
+                self.conn.enable_device()
+            except Exception:
+                pass
             raise Exception(f"Failed to fetch attendance logs: {str(e)}")
 
     def get_users(self) -> list:
@@ -268,7 +271,10 @@ class ZKService:
             self.conn.enable_device()
             return users
         except Exception as e:
-            self.conn.enable_device()
+            try:
+                self.conn.enable_device()
+            except Exception:
+                pass
             raise Exception(f"Failed to get users from physical device: {str(e)}")
 
     def sync_user_information(self) -> bool:

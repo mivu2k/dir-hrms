@@ -371,10 +371,14 @@ const pullDeviceUsers = async (device) => {
   actionLoading.value = device.id;
   try {
     const res = await axios.post(`/devices/${device.id}/pull-users`);
-    alert(`Import Complete:\n${res.data.message}`);
+    if (res.data.success) {
+      alert(`Import Complete:\n${res.data.message}`);
+    } else {
+      alert(`Import Failed:\n${res.data.message}\n\nTraceback:\n${res.data.traceback || ''}`);
+    }
     await fetchDevices();
   } catch (err) {
-    alert('Import Failed: ' + (err.response?.data?.detail || 'Import error'));
+    alert('Import Failed (API Error): ' + (err.response?.data?.detail || err.message || 'Import error'));
   } finally {
     actionLoading.value = null;
   }
