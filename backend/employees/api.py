@@ -2,7 +2,7 @@ from typing import List
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from django.db import transaction
-from ninja import Router
+from ninja import Router, Schema
 from ninja.errors import HttpError
 from api.security import JWTAuth, generate_token
 from employees.models import Company, Department, Designation, Employee
@@ -13,6 +13,10 @@ from employees.schemas import (
     EmployeeSchema, EmployeeCreateSchema, EmployeeBriefSchema
 )
 
+class LoginRequest(Schema):
+    username: str
+    password: str
+
 # Initialize routers
 auth_router = Router(tags=["Authentication"])
 employee_router = Router(tags=["Employees"], auth=JWTAuth())
@@ -20,13 +24,12 @@ employee_router = Router(tags=["Employees"], auth=JWTAuth())
 # ================= AUTHENTICATION ENDPOINTS =================
 
 @auth_router.post("/login", response={200: dict})
-def login(request, payload: dict):
+def login(request, payload: LoginRequest):
     """
     JWT Authentication Endpoint.
-    Payload format: {"username": "...", "password": "..."}
     """
-    username = payload.get("username")
-    password = payload.get("password")
+    username = payload.username
+    password = payload.password
     
     if not username or not password:
         raise HttpError(400, "Username and password are required")
