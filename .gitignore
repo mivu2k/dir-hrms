@@ -1,0 +1,21 @@
+# Python environment
+venv/
+backend_env/
+*.pyc
+__pycache__/
+db.sqlite3
+
+# Node modules & production builds
+frontend/node_modules/
+frontend/dist/
+
+# OS specific files
+.DS_Store
+Thumbs.db
+
+# Django media and staticfiles inside local workspace
+backend/media/
+backend/staticfiles/
+
+# Logs
+*.log
