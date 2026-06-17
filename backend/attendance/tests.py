@@ -77,3 +77,32 @@ class AttendanceCalculationTestCase(TestCase):
         summary = calculate_daily_summary(self.employee, self.date)
         self.assertEqual(summary.status, 'HOLIDAY')
         self.assertEqual(summary.working_hours, 0.00)
+
+    def test_pull_users_api(self):
+        """Simulate pulling users from device and verifying creation pipeline"""
+        from devices.models import Device
+        from leave.models import LeaveType
+        
+        # Ensure a default leave type exists
+        LeaveType.objects.create(name="Annual Leave", code="AL", days_per_year=15)
+        
+        # Create a simulated device
+        device = Device.objects.create(
+            name="Test ZK",
+            ip_address="192.168.1.250",
+            port=4370,
+            is_simulated=True,
+            is_active=True
+        )
+        
+        from devices.api import pull_users_from_device
+        
+        class MockRequest:
+            def __init__(self):
+                self.jwt_payload = {'role': 'SUPER_ADMIN', 'employee_id': 'EMP-T01'}
+                
+        req = MockRequest()
+        res = pull_users_from_device(req, device.id)
+        self.assertTrue(res['success'])
+        self.assertGreater(res['imported_count'], 0)
+
