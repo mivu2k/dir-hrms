@@ -108,24 +108,42 @@ def generate_monthly_payroll(request, payload: dict):
                 date__range=(start_date, end_date)
             )
             
-            # 1. Calculate Absent Days Deduction (1 day wage per absent, 0.5 per half day)
+            # 1. Calculate Absent and Unpaid Leave Days Deduction
             # Daily Wage = Basic Salary / 30
+            from decimal import Decimal
             daily_wage = basic / 30
             absent_days = summaries.filter(status='ABSENT').count()
             half_days = summaries.filter(status='HALF_DAY').count()
             
-            leave_deduction = daily_wage * (absent_days + (half_days * 0.5))
+            # Count days on unpaid leave
+            from leave.models import LeaveRequest
+            unpaid_leave_days = 0
+            on_leave_summaries = summaries.filter(status='ON_LEAVE')
+            for summary in on_leave_summaries:
+                leave_req = LeaveRequest.objects.filter(
+                    employee=emp,
+                    start_date__lte=summary.date,
+                    end_date__gte=summary.date,
+                    status='APPROVED'
+                ).select_related('leave_type').first()
+                if leave_req and not leave_req.leave_type.is_paid:
+                    unpaid_leave_days += 1
+            
+            leave_multiplier = Decimal(absent_days) + (Decimal(half_days) * Decimal('0.5')) + Decimal(unpaid_leave_days)
+            leave_deduction = daily_wage * leave_multiplier
             
             # 2. Calculate Late Arrival Deduction (e.g. 10% daily wage per late arrival after grace)
             late_arrivals = summaries.filter(late_minutes__gt=0).count()
-            late_deduction = daily_wage * 0.10 * late_arrivals
+            late_deduction = daily_wage * Decimal('0.10') * Decimal(late_arrivals)
             
             # 3. Calculate Overtime (e.g. 1.5x hourly rate)
-            # Hourly Rate = Daily Wage / 8 hours
-            hourly_rate = daily_wage / 8
+            # Hourly Rate = Daily Wage / (daily shift hours, default 7)
+            shift = emp.shift
+            shift_hours = shift.min_hours_full_day if shift else Decimal('7.00')
+            hourly_rate = daily_wage / shift_hours
             overtime_min = sum(summary.overtime_minutes for summary in summaries)
-            overtime_hours = overtime_min / 60.0
-            overtime_amount = hourly_rate * 1.5 * overtime_hours
+            overtime_hours = Decimal(overtime_min) / Decimal('60.0')
+            overtime_amount = hourly_rate * Decimal('1.5') * overtime_hours
             
             # 4. Tax Deduction
             tax_deduction = basic * (struct.tax_percentage / 100)
@@ -137,7 +155,7 @@ def generate_monthly_payroll(request, payload: dict):
             # Net Salary
             net = (basic + allowances + overtime_amount) - (leave_deduction + late_deduction + tax_deduction + eobi_deduction + pf_deduction)
             # Prevent negative salary
-            net = max(0.00, net)
+            net = max(Decimal('0.00'), net)
             
             # Create or update payslip
             payslip, _ = Payslip.objects.update_or_create(

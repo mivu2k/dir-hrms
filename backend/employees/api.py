@@ -4,8 +4,11 @@ from django.contrib.auth.models import User
 from django.db import transaction
 from ninja import Router, Schema
 from ninja.errors import HttpError
+from django.utils import timezone
 from api.security import JWTAuth, generate_token
 from employees.models import Company, Department, Designation, Employee
+from payroll.models import SalaryStructure
+from leave.models import LeaveType, LeaveAllocation
 from employees.schemas import (
     CompanySchema, CompanyCreateSchema,
     DepartmentSchema, DepartmentCreateSchema,
@@ -256,6 +259,29 @@ def create_employee(request, data: EmployeeCreateSchema):
             role=data.role,
             joining_date=data.joining_date
         )
+        
+        # Create Default Salary Structure (essential for running payroll later)
+        SalaryStructure.objects.create(
+            employee=emp,
+            basic_salary=45000.00,
+            allowances=5000.00,
+            eobi_contribution=1000.00,
+            provident_fund=1500.00,
+            tax_percentage=0.00
+        )
+        
+        # Allocate Leaves
+        active_leave_types = LeaveType.objects.all()
+        current_year = timezone.localdate().year
+        for lt in active_leave_types:
+            LeaveAllocation.objects.create(
+                employee=emp,
+                leave_type=lt,
+                year=current_year,
+                allocated_days=lt.days_per_year,
+                used_days=0.00
+            )
+            
         return emp
 
 

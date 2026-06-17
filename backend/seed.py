@@ -53,8 +53,8 @@ def seed_db():
             "grace_period_minutes": 15,
             "half_day_limit_minutes": 120,
             "early_exit_limit_minutes": 15,
-            "min_hours_full_day": 8.00,
-            "min_hours_half_day": 4.00,
+            "min_hours_full_day": 7.00,
+            "min_hours_half_day": 3.50,
             "is_active": True
         }
     )
