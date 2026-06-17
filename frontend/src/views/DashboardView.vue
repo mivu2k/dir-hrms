@@ -77,7 +77,7 @@
       <div class="bg-slate-900/40 backdrop-blur-md border border-slate-900 rounded-xl p-6 shadow-lg flex flex-col justify-between">
         <div>
           <h3 class="text-sm font-bold text-white uppercase tracking-wider mb-2">Web Attendance</h3>
-          <p class="text-xs text-slate-400 mb-6">Punch your check-in or check-out directly from the dashboard.</p>
+          <p class="text-xs text-slate-400 mb-6">Punch your check-in, break, or check-out directly from the dashboard.</p>
           
           <div class="space-y-4">
             <!-- Select Punch Type -->
@@ -98,6 +98,20 @@
                     'border py-2 rounded-lg font-medium text-xs transition-colors cursor-pointer'
                   ]"
                 >Check Out</button>
+                <button 
+                  @click="punchType = 'BREAK_OUT'"
+                  :class="[
+                    punchType === 'BREAK_OUT' ? 'bg-indigo-600 border-indigo-500 text-white' : 'bg-slate-950/60 border-slate-800 text-slate-400 hover:text-slate-200',
+                    'border py-2 rounded-lg font-medium text-xs transition-colors cursor-pointer'
+                  ]"
+                >Break Out</button>
+                <button 
+                  @click="punchType = 'BREAK_IN'"
+                  :class="[
+                    punchType === 'BREAK_IN' ? 'bg-indigo-600 border-indigo-500 text-white' : 'bg-slate-950/60 border-slate-800 text-slate-400 hover:text-slate-200',
+                    'border py-2 rounded-lg font-medium text-xs transition-colors cursor-pointer'
+                  ]"
+                >Break In</button>
               </div>
             </div>
 
@@ -166,7 +180,11 @@
                   <td class="py-2.5 text-slate-300">{{ log.timestamp }}</td>
                   <td class="py-2.5">
                     <span :class="[
-                      log.punch_type === 'CHECK_IN' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border-rose-500/20',
+                      log.punch_type === 'CHECK_IN' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : '',
+                      log.punch_type === 'CHECK_OUT' ? 'bg-rose-500/10 text-rose-400 border-rose-500/20' : '',
+                      log.punch_type === 'BREAK_OUT' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : '',
+                      log.punch_type === 'BREAK_IN' ? 'bg-sky-500/10 text-sky-400 border-sky-500/20' : '',
+                      log.punch_type === 'UNKNOWN' ? 'bg-slate-500/10 text-slate-400 border-slate-500/20' : '',
                       'px-1.5 py-0.5 rounded border text-xxs font-semibold'
                     ]">{{ log.punch_type }}</span>
                   </td>

@@ -212,6 +212,10 @@ class ZKService:
                     punch = 'CHECK_IN'
                 elif log.status in [1, 5, 21]:
                     punch = 'CHECK_OUT'
+                elif log.status == 2:
+                    punch = 'BREAK_OUT'
+                elif log.status == 3:
+                    punch = 'BREAK_IN'
                 
                 # Verification modes: 1 = Fingerprint, 15 = Face, 4 = Card, etc.
                 mode = 'FINGER'

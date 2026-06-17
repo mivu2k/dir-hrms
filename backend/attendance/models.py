@@ -26,6 +26,8 @@ class AttendanceLog(models.Model):
     PUNCH_CHOICES = [
         ('CHECK_IN', 'Check In'),
         ('CHECK_OUT', 'Check Out'),
+        ('BREAK_IN', 'Break In'),
+        ('BREAK_OUT', 'Break Out'),
         ('UNKNOWN', 'Unknown'),
     ]
 
